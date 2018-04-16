@@ -8,5 +8,16 @@ namespace EfSamurai.Domain
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public List<Quote> Quotes { get; set; }
+        public Hairstyle Hairstyle { get; set; }
+
+
+    }
+
+    public enum Hairstyle
+    {
+        Chonmage,
+        Oicho,
+        Western
     }
 }
