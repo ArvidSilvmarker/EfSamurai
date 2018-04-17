@@ -21,6 +21,11 @@ namespace EfSamurai.Data
         {
             modelBuilder.Entity<SamuraiInBattle>()
                 .HasKey(sb => new { sb.SamuraiId, sb.BattleId });
+
+            //modelBuilder.Entity<Battle>().HasOne(b => b.BattleLog).WithOne(b => b.Battle).OnDelete(DeleteBehavior.Cascade);
+            //modelBuilder.Entity<Samurai>().HasMany(s => s.Quotes).WithOne().OnDelete(DeleteBehavior.Cascade);
         }
+
+
     }
 }

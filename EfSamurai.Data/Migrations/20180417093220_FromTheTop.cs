@@ -5,21 +5,25 @@ using System.Collections.Generic;
 
 namespace EfSamurai.Data.Migrations
 {
-    public partial class SamuraiBattles : Migration
+    public partial class FromTheTop : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "BattleLog",
+                name: "Battles",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(nullable: true)
+                    Brutal = table.Column<bool>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
+                    EndDate = table.Column<DateTime>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    StartDate = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BattleLog", x => x.Id);
+                    table.PrimaryKey("PK_Battles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -36,47 +40,21 @@ namespace EfSamurai.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BattleEvent",
+                name: "BattleLog",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    BattleLogId = table.Column<int>(nullable: true),
-                    Description = table.Column<string>(nullable: true),
-                    Summary = table.Column<string>(nullable: true),
-                    Time = table.Column<DateTime>(nullable: false)
+                    BattleId = table.Column<int>(nullable: true),
+                    Name = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BattleEvent", x => x.Id);
+                    table.PrimaryKey("PK_BattleLog", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BattleEvent_BattleLog_BattleLogId",
-                        column: x => x.BattleLogId,
-                        principalTable: "BattleLog",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Battles",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    BattleLogId = table.Column<int>(nullable: true),
-                    Brutal = table.Column<bool>(nullable: false),
-                    Description = table.Column<string>(nullable: true),
-                    EndDate = table.Column<DateTime>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    StartDate = table.Column<DateTime>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Battles", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Battles_BattleLog_BattleLogId",
-                        column: x => x.BattleLogId,
-                        principalTable: "BattleLog",
+                        name: "FK_BattleLog_Battles_BattleId",
+                        column: x => x.BattleId,
+                        principalTable: "Battles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -98,6 +76,28 @@ namespace EfSamurai.Data.Migrations
                         name: "FK_Samurais_SecretIdentity_SecretIdentityId",
                         column: x => x.SecretIdentityId,
                         principalTable: "SecretIdentity",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BattleEvent",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    BattleLogId = table.Column<int>(nullable: true),
+                    Description = table.Column<string>(nullable: true),
+                    Summary = table.Column<string>(nullable: true),
+                    Time = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BattleEvent", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BattleEvent_BattleLog_BattleLogId",
+                        column: x => x.BattleLogId,
+                        principalTable: "BattleLog",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -153,9 +153,11 @@ namespace EfSamurai.Data.Migrations
                 column: "BattleLogId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Battles_BattleLogId",
-                table: "Battles",
-                column: "BattleLogId");
+                name: "IX_BattleLog_BattleId",
+                table: "BattleLog",
+                column: "BattleId",
+                unique: true,
+                filter: "[BattleId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Quote_SamuraiId",
@@ -185,13 +187,13 @@ namespace EfSamurai.Data.Migrations
                 name: "SamuraiInBattle");
 
             migrationBuilder.DropTable(
-                name: "Battles");
+                name: "BattleLog");
 
             migrationBuilder.DropTable(
                 name: "Samurais");
 
             migrationBuilder.DropTable(
-                name: "BattleLog");
+                name: "Battles");
 
             migrationBuilder.DropTable(
                 name: "SecretIdentity");

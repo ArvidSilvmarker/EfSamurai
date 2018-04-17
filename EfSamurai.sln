@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EfSamurai.Domain", "EfSamurai.Domain\EfSamurai.Domain.csproj", "{33ED44A4-811D-41BF-94B3-F154CBC5214B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfSamurai.Domain", "EfSamurai.Domain\EfSamurai.Domain.csproj", "{33ED44A4-811D-41BF-94B3-F154CBC5214B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EfSamurai.Data", "EfSamurai.Data\EfSamurai.Data.csproj", "{C3B5C45D-1BA5-4BB3-9800-8D4F0F724981}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfSamurai.Data", "EfSamurai.Data\EfSamurai.Data.csproj", "{C3B5C45D-1BA5-4BB3-9800-8D4F0F724981}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EfSamurai.App", "EfSamurai.App\EfSamurai.App.csproj", "{53C4AAD6-F87C-4A2B-8EE9-E8A95218593D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{C3B5C45D-1BA5-4BB3-9800-8D4F0F724981}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3B5C45D-1BA5-4BB3-9800-8D4F0F724981}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3B5C45D-1BA5-4BB3-9800-8D4F0F724981}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53C4AAD6-F87C-4A2B-8EE9-E8A95218593D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53C4AAD6-F87C-4A2B-8EE9-E8A95218593D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53C4AAD6-F87C-4A2B-8EE9-E8A95218593D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53C4AAD6-F87C-4A2B-8EE9-E8A95218593D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

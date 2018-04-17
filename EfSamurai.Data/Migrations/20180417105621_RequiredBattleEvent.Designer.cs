@@ -12,9 +12,10 @@ using System;
 namespace EfSamurai.Data.Migrations
 {
     [DbContext(typeof(SamuraiContext))]
-    partial class SamuraiContextModelSnapshot : ModelSnapshot
+    [Migration("20180417105621_RequiredBattleEvent")]
+    partial class RequiredBattleEvent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,7 +84,7 @@ namespace EfSamurai.Data.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int>("SamuraiId");
+                    b.Property<int?>("SamuraiId");
 
                     b.Property<string>("Text");
 
@@ -157,7 +158,7 @@ namespace EfSamurai.Data.Migrations
 
             modelBuilder.Entity("EfSamurai.Domain.Quote", b =>
                 {
-                    b.HasOne("EfSamurai.Domain.Samurai", "Samurai")
+                    b.HasOne("EfSamurai.Domain.Samurai")
                         .WithMany("Quotes")
                         .HasForeignKey("SamuraiId")
                         .OnDelete(DeleteBehavior.Cascade);
