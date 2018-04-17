@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using EfSamurai.Data;
 using EfSamurai.Domain;
+using Microsoft.EntityFrameworkCore;
 using Remotion.Linq.Parsing.Structure.IntermediateModel;
 
 namespace EfSamurai.App
@@ -17,6 +19,83 @@ namespace EfSamurai.App
             AddSomeBattles();
             AddOneSamuraiWithRelatedData();
             ListAllSamurai();
+            PrintSamuraiwithSecretName("Galnakossan");
+            ListAllQuotesOfType(QuoteType.Cheesy);
+            PrintBattles(ListAllBattles(new DateTime(800, 1, 1), new DateTime(1900, 1, 1),null));
+        }
+
+        private static void PrintBattles(List<Battle> battles)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine($"{"Name",-40}{"From",-20}{"To",-20}{"Brutal",-10}");
+            Console.ResetColor();
+            foreach (var battle in battles)
+            {
+                Console.WriteLine($"{battle.Name,-40}{battle.StartDate.Year,-20}{battle.EndDate.Year,-20}{(battle.Brutal ? "yes" : "no")}");
+            }
+        }
+
+        private static List<Battle> ListAllBattles(DateTime from, DateTime to, bool? isBrutal)
+        {
+            List<Battle> battles = null;
+            using (var context = new SamuraiContext())
+            {
+                battles = context.Battles
+                    .Where(battle => battle.StartDate >= from)
+                    .Where(battle => battle.EndDate <= to).ToList();
+                if (isBrutal != null)
+                    battles = battles.Where(battle => battle.Brutal == isBrutal).ToList();
+            }
+
+            return battles;
+        }
+
+        private static void ListAllQuotesOfType(QuoteType quoteType)
+        {
+            Console.WriteLine();
+            List<Quote> quotes = new List<Quote>();
+            using (var context = new SamuraiContext())
+            {
+                context.Samurais.SelectMany(s => s.Quotes).Where(q => q.Type == quoteType).ToList().ForEach(q => quotes.Add(q));
+            }
+
+            if (quotes.Count == 0)
+                Console.WriteLine($"There are no quotes of type {quoteType.ToString()}.");
+            else
+                foreach (var quote in quotes)
+                    Console.WriteLine($"\"{quote.Text}\" is a {quote.Type.ToString().ToLower()} quote said by {FindSamurai(quote.SamuraiId).Name}.");
+
+            Console.WriteLine();
+        }
+
+
+        private static Samurai FindSamurai(int id)
+        {
+            using (var context = new SamuraiContext())
+            {
+                return context.Samurais.SingleOrDefault(s => s.Id == id);
+            }
+        }
+
+        private static void PrintSamuraiwithSecretName(string secretName)
+        {
+            Samurai secretSamurai = FindSamuraiWithSecretName(secretName);
+            if (secretSamurai == null)
+                Console.WriteLine($"There is no Samurai known by the name of {secretName}.");
+            else
+                PrintSamurai(new List<Samurai>{secretSamurai});
+        }
+
+
+        private static Samurai FindSamuraiWithSecretName(string secretName)
+        {
+            Samurai secretSamurai = null;
+            using (var context = new SamuraiContext())
+            {
+                secretSamurai = context.Samurais.SingleOrDefault(s => s.SecretIdentity.Name == secretName);
+            }
+
+            return secretSamurai;
         }
 
         public static List<Samurai> ReadAllSamurai()
@@ -53,20 +132,6 @@ namespace EfSamurai.App
             foreach (var s in samurai)
             {
                 Console.Write($"{s.Name,-20}{s.Hairstyle.ToString(),-15}");
-
-                //if (s.Quotes.Count > 0)
-                //{
-                //    foreach (var quote in s.Quotes)
-                //    {
-                //        Console.WriteLine($"{"",-55}{"'" + quote.Text + "'",-30}");
-                //    }
-                //}
-                //else
-                //{
-                //    Console.WriteLine();
-                //}
-
-
                 Console.WriteLine();
             }
 
@@ -104,8 +169,8 @@ namespace EfSamurai.App
                 Name = "Battle of Utapau",
                 Description = "The final battle of the war against the separatists.",
                 Brutal = true,
-                StartDate = new DateTime(6212, 05, 15),
-                EndDate = new DateTime(6212, 05, 15),
+                StartDate = new DateTime(1545, 05, 15),
+                EndDate = new DateTime(1545, 05, 15),
                 BattleLog = new BattleLog
                 {
                     Name = "Chronicle of the Battle of Utapau",
@@ -113,13 +178,13 @@ namespace EfSamurai.App
                     {
                         new BattleEvent
                         {
-                            Time = new DateTime(6212, 05, 15),
+                            Time = new DateTime(1545, 05, 15),
                             Summary = "Lord Kenobi greets General Grievous",
                             Description = "Well, hello there, lord Kenobi greeted the general..."
                         },
                         new BattleEvent
                         {
-                            Time = new DateTime(6212, 05, 15),
+                            Time = new DateTime(1545, 05, 15),
                             Summary = "The Betrayal",
                             Description =
                                 "It was at that moment, that the mercenaries recieved the order from the Emperor, and they turned their weapons upon the samurai."
@@ -168,7 +233,7 @@ namespace EfSamurai.App
                         }
 
                     },
-                    Hairstyle = Hairstyle.Chonmage
+                    Hairstyle = Hairstyle.Oicho
                 },
                 new Samurai
                 {
