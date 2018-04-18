@@ -1,27 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using EfSamurai.Data;
 using EfSamurai.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Remotion.Linq.Parsing.Structure.IntermediateModel;
 
 namespace EfSamurai.App
 {
     class Program
     {
+        private static SamuraiContext _context;
+
         static void Main(string[] args)
         {
-            ClearDatabase();
-            AddSomeSamurai();
-            AddSomeBattles();
-            AddOneSamuraiWithRelatedData();
-            ListAllSamurai();
-            PrintSamuraiwithSecretName("Galnakossan");
-            ListAllQuotesOfType(QuoteType.Cheesy);
-            PrintBattles(ListAllBattles(new DateTime(800, 1, 1), new DateTime(1900, 1, 1),null));
+            //_context = new SamuraiContext();
+            //_context.GetService<ILoggerFactory>().AddProvider(new MyLoggerProvider());
+
+            //Initialize(new SamuraiContext());
+            //ClearDatabase();
+            //ReseedAllTables();
+            //AddSomeSamurai();
+            //AddSomeBattles();
+            //AddOneSamuraiWithRelatedData();
+            //ListAllSamurai();
+            //PrintSamuraiwithSecretName("Galnakossan");
+            //ListAllQuotesOfType(QuoteType.Cheesy);
+            //PrintBattles(ListAllBattles(new DateTime(800, 1, 1), new DateTime(1900, 1, 1),null));
+            //List<string> namesWithAlias = AllSamuariNameWithAlias();
+            //DisplayList(namesWithAlias);
+            //PrintBattlesWithLog(ListAllBattles(new DateTime(800, 1, 1), new DateTime(1900, 1, 1), null));
+            PrintSamuraiInfo(ReadSamuraiInfo());
+            //GetBattlesForSamurai("Obi-Wan Kenobi");
+            //LoggingLab();
+        }
+
+        private static void PrintSamuraiInfo(List<SamuraiInfo> info)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine($"{"Name", -25}{"Secret Identity",-20}{"Battles",-80}");
+            Console.ResetColor();
+            foreach (var samuraiInfo in info)
+            {
+                Console.WriteLine($"{samuraiInfo.Name,-25}{samuraiInfo.RealName,-20}{samuraiInfo.BattleNames,-80}");
+            }
+        }
+
+        private static void DisplayList(List<string> text)
+        {
+            Console.WriteLine();
+            text.ForEach(Console.WriteLine);
+            Console.WriteLine();
         }
 
         private static void PrintBattles(List<Battle> battles)
@@ -31,8 +65,37 @@ namespace EfSamurai.App
             Console.ResetColor();
             foreach (var battle in battles)
             {
-                Console.WriteLine($"{battle.Name,-40}{battle.StartDate.Year,-20}{battle.EndDate.Year,-20}{(battle.Brutal ? "yes" : "no")}");
+                Console.WriteLine($"{battle.Name,-40}{GetDate(battle.StartDate),-20}{GetDate(battle.EndDate),-20}{(battle.Brutal ? "yes" : "no")}");
             }
+        }
+
+        private static void PrintBattlesWithLog(List<Battle> battles)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("The Grand List of Battles");
+            Console.ResetColor();
+            foreach (var battle in battles)
+            {
+                Console.WriteLine($"{battle.Name}");
+                Console.WriteLine($"It was a {(battle.Brutal ? "brutal" : "heroic")} battle from {GetDate(battle.StartDate)} to {GetDate(battle.EndDate)}.");
+                Console.WriteLine($"The battle was chronicled in {battle.BattleLog.Name}:");
+                foreach (var battleEvent in battle.BattleLog.Events.OrderBy(e => e.Time).ToList())
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"At {GetDate(battleEvent.Time)} - {battleEvent.Summary}");
+                    Console.WriteLine($"{battleEvent.Description}");
+                }
+
+                Console.WriteLine("_______________________________________________________________________________");
+            }
+
+            
+        }
+
+        private static string GetDate(DateTime dt)
+        {
+            CultureInfo ci = new CultureInfo("ja-JP");
+            return dt.ToString("D", ci);
         }
 
         private static List<Battle> ListAllBattles(DateTime from, DateTime to, bool? isBrutal)
@@ -40,6 +103,7 @@ namespace EfSamurai.App
             List<Battle> battles = null;
             using (var context = new SamuraiContext())
             {
+                var battlesWithLogAndEvents = context.Battles.Select(b => b.BattleLog).Select(l => l.Events).ToList();
                 battles = context.Battles
                     .Where(battle => battle.StartDate >= from)
                     .Where(battle => battle.EndDate <= to).ToList();
@@ -67,7 +131,6 @@ namespace EfSamurai.App
 
             Console.WriteLine();
         }
-
 
         private static Samurai FindSamurai(int id)
         {
@@ -298,5 +361,146 @@ namespace EfSamurai.App
             }
         }
 
+        private static List<string> AllSamuariNameWithAlias()
+        {
+            List<string> text = new List<string>();
+            using (var context = new SamuraiContext())
+            {
+                context.Samurais.Select(s => s.SecretIdentity).ToList();
+               
+                foreach (Samurai samurai in context.Samurais.ToList())
+                {
+                    if (samurai.SecretIdentity != null)
+                        text.Add($"{samurai.Name} alias {samurai.SecretIdentity.Name}");
+                }
+                
+            }
+
+            return text;
+        }
+
+        private static List<SamuraiInfo> ReadSamuraiInfo()
+        {
+            List<SamuraiInfo> infos = new List<SamuraiInfo>();
+            using (var context = new SamuraiContext())
+            {
+                var list = context.Samurais
+                    .Include(s => s.SecretIdentity)
+                    .Include(s => s.Battles)
+                    .ThenInclude(s => s.Battle).ToList();
+
+
+                foreach (var samurai in list)
+                {
+                    string battles = "";
+                    foreach (var samuraiBattle in samurai.Battles.ToList())
+                    {
+                        battles += samuraiBattle.Battle.Name + ",";
+                    }
+
+                    if (battles.Length > 0)
+                        battles.Remove(battles.Length - 1);
+
+                    infos.Add(new SamuraiInfo
+                    {
+                        Name = samurai.Name ?? "",
+                        BattleNames = String.Join(",",samurai.Battles.Select(s => s.Battle.Name)),
+                        RealName = samurai.SecretIdentity?.Name
+                    });
+                }
+
+                infos.Add(new SamuraiInfo());
+
+            }
+
+            return infos;
+        }
+
+        private static void GetBattlesForSamurai(string samuraiName)
+        {
+            List<Battle> battles = new List<Battle>();
+            using (var context = new SamuraiContext())
+            {
+                var samurai = context.Samurais.Include(s => s.Battles).ThenInclude(b => b.Battle).FirstOrDefault(s => s.Name == samuraiName);
+
+                if (samurai != null)
+                {
+                    Console.WriteLine($"Samurai {samuraiName} is a veteran of the following battles: ");
+                    foreach (var samuraiInBattle in samurai.Battles)
+                    {
+                        Console.WriteLine($"ID: {samuraiInBattle.BattleId}    Name: {samuraiInBattle.Battle.Name}");
+                    }
+                } 
+            }
+        }
+
+        private static void LoggingLab()
+        {
+            using (var context = new SamuraiContext())
+            {
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine("var query = context.Samurais;");
+                Console.WriteLine("----------------------------------------------");
+                var query = context.Samurais;
+                Console.ReadKey();
+
+
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine("var samurais = context.Samurais.ToList();");
+                Console.WriteLine("----------------------------------------------");
+                var samurais = context.Samurais.ToList();
+                Console.ReadKey();
+
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine(" foreach (var samurai in samurais) {Console.WriteLine(samurai.Name);}");
+                Console.WriteLine("----------------------------------------------");
+                foreach (var samurai in samurais)
+                {
+                    Console.WriteLine(samurai.Name);
+                }
+                Console.ReadKey();
+
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine("var first = context.Samurais.First();");
+                Console.WriteLine("----------------------------------------------");
+                var first = context.Samurais.First();
+                Console.ReadKey();
+
+                // Lägg till samurai i context utan att anropa SaveChanges
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine("context.Samurais.Add(new Samurai { Name = \"Sven\" });");
+                Console.WriteLine("----------------------------------------------");
+                context.Samurais.Add(new Samurai { Name = "Sven" });
+                Console.ReadKey();
+
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine("context.SaveChanges();");
+                Console.WriteLine("----------------------------------------------");
+                context.SaveChanges();
+                Console.ReadKey();
+            }
+
+        }
+
+        private static void ReseedAllTables()
+        {
+            using (var context = new SamuraiContext())
+            {
+                context.Database.ExecuteSqlCommand("DBCC CHECKIDENT('Samurais', RESEED, 0)");
+                context.Database.ExecuteSqlCommand("DBCC CHECKIDENT('SecretIdentity', RESEED, 0)");
+                context.Database.ExecuteSqlCommand("DBCC CHECKIDENT('Quote', RESEED, 0)");
+                context.Database.ExecuteSqlCommand("DBCC CHECKIDENT('Battles', RESEED, 0)");
+                context.Database.ExecuteSqlCommand("DBCC CHECKIDENT('BattleLog', RESEED, 0)");
+                context.Database.ExecuteSqlCommand("DBCC CHECKIDENT('BattleEvent', RESEED, 0)");
+            }
+
+        }
+
+        public static void Initialize(SamuraiContext context)
+
+        {
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+        }
     }
 }
